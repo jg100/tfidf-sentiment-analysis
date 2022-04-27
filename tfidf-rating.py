@@ -51,21 +51,38 @@ def remove_stop_words(dataset):
 def remove_garbage(dataset):
     print(Fore.GREEN + "Removing Garbage Values...")
     garbage = "~`!@#$%^&*()_-+={[}]|\:;'<,>.?/"
-    for i in range(dataset.shape[0] - 1):
+    for i in range(dataset.shape[0]):
         dataset.reviews[i] = " ".join([char for char in dataset.reviews[i] if char not in garbage])
     return dataset
 
 
+'''
+def calculate_tfidf(word, tf, N, df_doc, corpus):
+    occurences = corpus.reviews.str.count(word)
+    for i in range(df_doc.shape[0]):
+        if word in df_doc.reviews[i]:
+'''
+
+
+
+
+
 def tfidf_vectorizer(train, test):
+    # Number of documents in both sets (total docs)
     N = train.shape[0] + test.shape[0]
     corpus = pd.DataFrame({"reviews": train["reviews"]})
     corpus.reviews.append(test["reviews"], ignore_index=True)
-    tfidf = pd.DataFrame({corpus})
-    print(tfidf)
+
+    tfidf = pd.DataFrame(columns=corpus["reviews"])
+    print(tfidf.columns)
+
     return tfidf
 
 
 # Creating negative and positive data frames
+
+
+# Logistic regression might work better because of the long sparse nature of our matrix
 
 # Loading the training data
 pos_df_train = load_data(path)
