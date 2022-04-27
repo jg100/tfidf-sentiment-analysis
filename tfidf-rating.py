@@ -1,3 +1,4 @@
+import colorama.initialise
 import nltk
 import os
 import pandas as pd
@@ -70,6 +71,7 @@ def calculate_tfidf(word, tf, N, df_doc, corpus):
 def tfidf_vectorizer(train, test):
     corpus = pd.DataFrame({"reviews": train["reviews"]})
     corpus.reviews.append(test["reviews"], ignore_index=True)
+
     N = corpus.shape[0]
     # use corpus to create bag of words vectors
     words = []
@@ -91,6 +93,12 @@ def tfidf_vectorizer(train, test):
                 tfidf[word][doc] = tfidf[word][doc] + 1
 
     print("Term frequency table generated...")
+
+    print("Calculating the df of every word...")
+
+    # Document frequency of given word
+    df_w = len({tfidf.loc[tfidf["based"] != 0, "based"].iat[0]})
+    print(non_zero)
 
     print(tfidf.head())
 
@@ -121,6 +129,9 @@ test_set = remove_stop_words(test_set)
 test_set = remove_garbage(test_set)
 
 tfidf_vectorizer(train_set, test_set)
+
+#Rest the color of the output
+print(colorama.initialise.reset_all())
 
 print(test_set)
 print(train_set)
