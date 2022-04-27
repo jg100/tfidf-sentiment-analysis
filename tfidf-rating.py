@@ -20,7 +20,10 @@ def load_data(folder_path):
     logging.info("Loading text data into data frame...")
     temp = []
     labels = []
+    count = 0
     for file in os.listdir(folder_path):
+        if count == 10: break
+        count = count + 1
         with open(os.path.join(folder_path + file), 'r') as f:
             temp.append(f.readlines()[0])
             labels.append(file[file.index('_') + 1:file.index('.')])
@@ -64,16 +67,26 @@ def calculate_tfidf(word, tf, N, df_doc, corpus):
 '''
 
 
-
-
-
 def tfidf_vectorizer(train, test):
-    # Number of documents in both sets (total docs)
-    N = train.shape[0] + test.shape[0]
     corpus = pd.DataFrame({"reviews": train["reviews"]})
     corpus.reviews.append(test["reviews"], ignore_index=True)
+    N = corpus.shape[0]
+    # use corpus to create bag of words vectors
+    words = []
+    # Traverse the corpus df and extracts only the words
+    for i in range(corpus.shape[0]):
+        words += (str(corpus["reviews"][i]).split(" "))
 
-    tfidf = pd.DataFrame(columns=corpus["reviews"])
+    # Edits the corpus to only have unique words
+    words = list(dict.fromkeys(words))
+    print(words)
+    # Creates tfidf data frame with the unqiue words as the index
+    tfidf = pd.DataFrame(columns=words)
+
+    # Traverse documents and extract counts from each
+    for i in range(corpus.shape[0]):
+        words += (str(corpus["reviews"][i]).split(" "))
+
     print(tfidf.columns)
 
     return tfidf
