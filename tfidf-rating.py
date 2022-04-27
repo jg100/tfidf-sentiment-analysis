@@ -81,13 +81,18 @@ def tfidf_vectorizer(train, test):
     words = list(dict.fromkeys(words))
     print(words)
     # Creates tfidf data frame with the unqiue words as the index
-    tfidf = pd.DataFrame(columns=words)
+    tfidf = pd.DataFrame(0, index=np.arange(len(corpus)), columns=words)
 
     # Traverse documents and extract counts from each
-    for i in range(corpus.shape[0]):
-        words += (str(corpus["reviews"][i]).split(" "))
+    print("Generating term frequency table...")
+    for doc in range(corpus.shape[0]):
+        for word in words:
+            if word in corpus["reviews"][doc]:
+                tfidf[word][doc] = tfidf[word][doc] + 1
 
-    print(tfidf.columns)
+    print("Term frequency table generated...")
+
+    print(tfidf.head())
 
     return tfidf
 
