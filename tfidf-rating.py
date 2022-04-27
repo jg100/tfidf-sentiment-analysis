@@ -68,6 +68,10 @@ def calculate_tfidf(word, tf, N, df_doc, corpus):
 '''
 
 
+def compute_tf_idf(tf_xy, N, df_x):
+    return tf_xy * np.log2(N / df_x)
+
+
 def tfidf_vectorizer(train, test):
     corpus = pd.DataFrame({"reviews": train["reviews"]})
     corpus.reviews.append(test["reviews"], ignore_index=True)
@@ -94,11 +98,14 @@ def tfidf_vectorizer(train, test):
 
     print("Term frequency table generated...")
 
-    print("Calculating the df of every word...")
-
+    print("Calculating the tfidf of the corpus...")
     # Document frequency of given word
-    df_w = len({tfidf.loc[tfidf["based"] != 0, "based"].iat[0]})
-    print(non_zero)
+    for doc in range(corpus.shape[0]):
+        for word in words:
+            if word in corpus["reviews"][doc]:
+                tf_x = tfidf[word][doc]
+                df_x = len({tfidf.loc[tfidf["based"] != 0, "based"].iat[0]})
+                tfidf[word][doc] = compute_tf_idf(tf_x, N, df_x)
 
     print(tfidf.head())
 
@@ -130,7 +137,7 @@ test_set = remove_garbage(test_set)
 
 tfidf_vectorizer(train_set, test_set)
 
-#Rest the color of the output
+# Rest the color of the output
 print(colorama.initialise.reset_all())
 
 print(test_set)
