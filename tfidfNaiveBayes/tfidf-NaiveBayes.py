@@ -109,20 +109,17 @@ class TfidfVectorizer():
                 n_gram_word = n_gram_word[:-1]
                 
                 # add to wordsList if it is not in it already
-                if temp_words[j] not in unique_words:
+                if n_gram_word not in unique_words:
                     unique_words += [n_gram_word]
-        
-        unique_words.sort()
 
-        # Store words as dict or hashmap in wordsList
-        for i in range(0, len(unique_words), 1):
-            self.words_list[unique_words[i]] = i
+        self.words_list = {unique_words[i]:i for i in range(len(unique_words))}
 
         return
         
     def transform(self, corpus):
         
-        # tfidf, total documents, total terms in document to normalize, number of document with term 
+        # tfidf, total documents, total terms in document to normalize, number of document with term
+
         tfidf = [ [ 0 for j in range( len( self.words_list) ) ] for i in range( len( corpus ) ) ]
         total_doc = len(corpus)
         total_terms = [ 0 for i in range( len( corpus ) ) ]
@@ -147,11 +144,11 @@ class TfidfVectorizer():
                 # remove last char which is a space in string
                 n_gram_word = n_gram_word[:-1]
 
+                total_terms[i] += 1
+
                 index = self.words_list.get(n_gram_word)
-                
                 if index is not None:
                     tfidf[i][index] += 1
-                    total_terms[i] += 1
                     unique_words.add(index)
 
             for x in unique_words:
@@ -172,6 +169,8 @@ class TfidfVectorizer():
             
             euclideanNorm = math.sqrt(euclideanNorm)
             for j in range(len(self.words_list)):
+                if euclideanNorm == 0:
+                    break
                 tfidf[i][j] /= euclideanNorm
 
         return tfidf
@@ -192,13 +191,34 @@ review_actual_val += tempActualVal
 
 corpus = filterData(corpus, stopwords)
 
-tfidf_vector = TfidfVectorizer(1)
+tfidf_vector = TfidfVectorizer(2)
 tfidf_vector.fit(corpus)
 X = tfidf_vector.transform(corpus)
+
+# grabs 
+def test(testDirectory, startIndex, endIndex):
+    corpus = []
+    review_actual_val = []
+
+    for x in testDirectory:
+        (tempCorpus, tempActualVal) = getReviews(x, startIndex, endIndex)
+        corpus += tempCorpus
+        review_actual_val += tempActualVal 
+
+    return corpus, review_actual_val
+
 
 MNB = MultinomialNB(alpha = 1)
 
 MNB.fit(X, review_actual_val)
+
+
+corpus = []
+review_actual_val = []
+corpus, review_actual_val = test([testPosDirectory, testNegDirectory], 0, 100)
+X = tfidf_vector.transform(corpus)
+
+
 p = MNB.predict(X)
 
 count = 0
