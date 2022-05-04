@@ -6,6 +6,8 @@ import numpy as np
 from nltk.corpus import stopwords
 import logging
 from colorama import Fore, Back
+from sklearn.linear_model import LogisticRegression
+
 
 path = "aclImdb/test/pos/"
 neg_path = "aclImdb/test/neg/"
@@ -23,7 +25,7 @@ def load_data(folder_path):
     labels = []
     count = 0
     for file in os.listdir(folder_path):
-        if count == 10: break
+        if count == 100: break
         count = count + 1
         with open(os.path.join(folder_path + file), 'r') as f:
             temp.append(f.readlines()[0])
@@ -111,11 +113,13 @@ def tfidf_vectorizer(train, test):
 
     return tfidf
 
-
-# Creating negative and positive data frames
-
-
-# Logistic regression might work better because of the long sparse nature of our matrix
+'''
+# Logistic regression modeling
+def logistic_regression(train_features, train_labels):
+    clf = LogisticRegression(random_state=0, solver='lbfgs')
+    clf.fit(train_features, train_labels)
+    return clf
+'''
 
 # Loading the training data
 pos_df_train = load_data(path)
@@ -127,6 +131,11 @@ pos_df_test = load_data(test_pos_path)
 neg_df_test = load_data(test_neg_path)
 test_set = pos_df_test.merge(neg_df_test, how="outer")
 
+#Generating labels for train (1-10)
+labels = test_set["labels"].append(train_set["labels"], ignore_index="True")
+
+#Generating train features
+
 train_set = tokenize(train_set)
 train_set = remove_stop_words(train_set)
 train_set = remove_garbage(train_set)
@@ -135,10 +144,14 @@ test_set = tokenize(test_set)
 test_set = remove_stop_words(test_set)
 test_set = remove_garbage(test_set)
 
-tfidf_vectorizer(train_set, test_set)
+tf_idf_matrix = tfidf_vectorizer(train_set, test_set)
 
 # Rest the color of the output
 print(colorama.initialise.reset_all())
 
 print(test_set)
 print(train_set)
+
+# clf = logistic_regression(tf_idf_matrix, labels)
+
+
