@@ -1,13 +1,20 @@
 import os
 import re
-import gensim
-import math
-import numpy as np
-import nltk.corpus
-from sklearn.naive_bayes import MultinomialNB
 from operator import add
+from math import sqrt
+from math import log
+from numpy import power
+from numpy import divide
+from numpy import array
+from numpy import unique
+
+import nltk.corpus
 import numpy as np
 from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB 
+
 
 directoryPos = "../aclImdb/train/pos"
 directoryNeg = "../aclImdb/train/neg"
@@ -23,30 +30,19 @@ corpus = []
 review_actual_val = []
 
 # stop list from nltk
-stopwords = ["i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself",
-             "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its",
-             "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this",
-             "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has",
-             "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or",
-             "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between",
-             "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in",
-             "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when",
-             "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such",
-             "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will",
-             "just", "don", "should", "now"]
-
 stopwords = nltk.corpus.stopwords.words("english")
+
+pStemmer = PorterStemmer()
 
 # Get reviews from a folder
 # store the text in the corpus and store vals in a array also 
 def getReviews(path, firstIndex, lastIndex):
     print("[getReviews() function called]")
-    corpus = []
-    review_actual_val = []
+    corpus = []  # List of text
+    review_actual_val = []  # List of values
 
     # Traverse folder for text files names
     reviewNames = os.listdir(path)[firstIndex:lastIndex]
-
     for x in reviewNames:
         if x.endswith(".txt"):
             # get the rating from file name
@@ -59,7 +55,12 @@ def getReviews(path, firstIndex, lastIndex):
 
             # add review to corpus
             text_review = file.read()
+            
+            # Close file
+            file.close()
+
             corpus.append(text_review)
+
     return corpus, review_actual_val
 
 
@@ -89,15 +90,16 @@ def filterData(corpus, stopwords):
 
         text_token = text_review.split()
         
-        # filter out stop words
-        tokens_without_sw = [word for word in text_token if not word in stopwords]
-
-        tempCorpus.append(' '.join(tokens_without_sw))
-
+        # filter out stop words and stem
+        tokens_without_sw = [pStemmer.stem(word) for word in text_token if not word in stopwords]
+        tempStr = ' '.join(tokens_without_sw)
+        
+        tempCorpus.append(tempStr)
+    
     return tempCorpus
 
 
-class TfidfVectorizer():
+class Tfidf_Vectorizer():
     def __init__(self, n_gram=1):
         self.words_list = {}
         self.n_gram = n_gram
@@ -108,27 +110,23 @@ class TfidfVectorizer():
     # get every unique word or n gram phrase from corpus
     def fit(self, corpus):
         print("Fitting corpus to vectors")
-        unique_words = []
+        unique_words = set()
 
         # loop through the reviews documents
-        for i in range(0, len(corpus), 1):
+        for i in range(len(corpus)):
+
             # split up words in review 
             temp_words = corpus[i].split()
 
-            for j in range(0, len(temp_words) - self.n_gram + 1, 1):
+            for j in range(len(temp_words) - self.n_gram + 1):
 
                 # create the ngram phrase
-                n_gram_word = ""
-                for k in range(0, self.n_gram, 1):
-                    n_gram_word += temp_words[j + k] + " "
-
-                # remove last char which is a space in string
-                n_gram_word = n_gram_word[:-1]
-
+                n_gram_word = " ".join(temp_words[j:j + self.n_gram])  # Test this
+                
                 # add to wordsList if it is not in it already
-                if n_gram_word not in unique_words:
-                    unique_words += [n_gram_word]
-
+                unique_words.add(n_gram_word)
+        
+        unique_words = list(set(unique_words))
         self.words_list = {unique_words[i]: i for i in range(len(unique_words))}
 
         return
@@ -151,15 +149,10 @@ class TfidfVectorizer():
             # unique words use to count document with a term
             unique_words = set()
 
-            for j in range(0, len(temp_words) - self.n_gram + 1, 1):
+            for j in range(len(temp_words) - self.n_gram + 1):
 
                 # create the ngram phrase
-                n_gram_word = ""
-                for k in range(0, self.n_gram, 1):
-                    n_gram_word += temp_words[j + k] + " "
-
-                # remove last char which is a space in string
-                n_gram_word = n_gram_word[:-1]
+                n_gram_word = " ".join(temp_words[j:j + self.n_gram])  # Test this
 
                 total_terms[i] += 1
 
@@ -182,10 +175,10 @@ class TfidfVectorizer():
                 
                 # tfidf = word_freq / word_count * total_num_doc / doc
                 tfidf[i][j] /= total_terms[i]
-                tfidf[i][j] *= (math.log((total_doc + 1) / (doc_with_term[j] + 1)) + 1)
+                tfidf[i][j] *= (log((total_doc + 1) / (doc_with_term[j] + 1)) + 1)
                 euclideanNorm += tfidf[i][j] ** 2
 
-            euclideanNorm = math.sqrt(euclideanNorm)
+            euclideanNorm = sqrt(euclideanNorm)
 
             # sum all values together then divide by eNorm
             for j in range(len(self.words_list)):
@@ -195,7 +188,7 @@ class TfidfVectorizer():
 
         return tfidf
 
-class MultinomialNB2:
+class MultinomialNaiveBayes:
     def __init__(self, alpha=1):
         self.alpha = alpha
         self.priors = {}
@@ -203,16 +196,16 @@ class MultinomialNB2:
 
     # x is the tfidf matrix, y is the actual value for each row
     def fit(self, x_train, y_train):
-
+        print("Fiting vectors to Multinomial Naive Bayes")
         """
         classes_count is temp variable use to calculate the unique classes
         self.priors will be use to calculate the priors probabilities
         total_documents is the total number of documents use to fit MNB 
             which is use to calculate prior probabilities
         """
-        classes_count = np.array(y_train)
-        unique, counts = np.unique(classes_count, return_counts=True)
-        self.priors = {A: B for A, B in zip(unique, counts)}
+        classes_count = array(y_train)
+        unique_words, counts = unique(classes_count, return_counts=True)
+        self.priors = {A: B for A, B in zip(unique_words, counts)}
         total_documents = sum(self.priors.values())
         
         # calculate prior probabilities
@@ -246,13 +239,14 @@ class MultinomialNB2:
 
         # calculate all likelihood 
         for i in classes:
-            classes[i][:] = np.divide(np.array(classes[i]) + 1, class_total[i] + self.alpha * num_features)
+            classes[i][:] = divide(np.array(classes[i]) + 1, class_total[i] + self.alpha * num_features)
         
         # save likelihood 
         self.likelihood = classes
         return
 
     def predict(self, x_test):
+        print("Predicting the result")
         prediction = []
 
         # calc argmax of each document
@@ -268,7 +262,7 @@ class MultinomialNB2:
                 p = float(self.priors[j])
                 for k in range(len(i)):
                     if i[k] != 0:
-                        p *= np.power(self.likelihood[j][k], i[k])
+                        p *= power(self.likelihood[j][k], i[k])
 
                 # if probability is greater than previous update class and max probability
                 if p > max_prob:
@@ -279,71 +273,58 @@ class MultinomialNB2:
         return prediction
 
 
-(tempCorpus, tempActualVal) = getReviews(TrP, 0, 100)
-corpus += tempCorpus
-review_actual_val += tempActualVal
+(tempCorpus, tempActualVal) = getReviews(TrP, 0, 1000)
+corpus.extend(tempCorpus)
+review_actual_val.extend(tempActualVal)
 
-(tempCorpus, tempActualVal) = getReviews(TrN, 0, 100)
-corpus += tempCorpus
-review_actual_val += tempActualVal
+(tempCorpus, tempActualVal) = getReviews(TrN, 0, 1000)
+corpus.extend(tempCorpus)
+review_actual_val.extend(tempActualVal)
 
 corpus = filterData(corpus, stopwords)
-tfidf_vector = TfidfVectorizer(1)
+tfidf_vector = Tfidf_Vectorizer()
 tfidf_vector.fit(corpus)
 X = tfidf_vector.transform(corpus)
 
 
 # grabs
-def test(testDirectory, startIndex, endIndex):
+def test(testDirectory, stopwords, startIndex, endIndex):
     corpus = []
     review_actual_val = []
 
     for x in testDirectory:
         (tempCorpus, tempActualVal) = getReviews(x, startIndex, endIndex)
-        corpus += tempCorpus
-        review_actual_val += tempActualVal
-
+        corpus.extend(tempCorpus)
+        review_actual_val.extend(tempActualVal)
+    
+    corpus = filterData(corpus, stopwords)
+    
     return corpus, review_actual_val
 
-
-MNB = MultinomialNB(alpha = 1)
+MNB = MultinomialNaiveBayes()
 MNB.fit(X, review_actual_val)
-
-MNB2 = MultinomialNB2()
-MNB2.fit(X, review_actual_val)
-
-# MNB2 = MultinomialNB2(1)
-# MNB2.fit(X, review_actual_val)
 
 corpus = []
 review_actual_val = []
-corpus, review_actual_val = test([TeP, TeN], 0, 100)
+corpus, review_actual_val = test([TeP, TeN], stopwords, 0, 1000)
 X = tfidf_vector.transform(corpus)
 
 p1 = MNB.predict(X)
-p2 = MNB2.predict(X)
 
 count1 = 0
-count2 = 0
+actualVal = {'1':0,'2':0,'3':0,'4':0,'7':0,'8':0,'9':0,'10':0}
+predictVal = {'1':0,'2':0,'3':0,'4':0,'7':0,'8':0,'9':0,'10':0}
+for x in review_actual_val:
+    actualVal[x] += 1
+
+for x in p1:
+    predictVal[x] += 1
+
 for i in range(len(p1)):
     if review_actual_val[i] == p1[i]:
         count1 += 1
-    if review_actual_val[i] == p2[i]:
-        count2 += 1
 
-print("Reviews correct: ", count1, "; ", count2, " ;Total reviews: ", len(p1))
+print(actualVal)
+print(predictVal)
 
-
-
-# from sklearn.feature_extraction.text import TfidfVectorizer
-
-# vectorizer = TfidfVectorizer(analyzer='word', stop_words='english', norm='l2')
-# Y = vectorizer.fit_transform(["good bad","ok activity"])
-
-# print()
-# print(Y[0, 1])
-# print(vectorizer.get_feature_names_out())
-
-# print(tfidf_val)
-
-# print(gensim.parsing.stem_text("try writing nonsense"))
+print("Reviews correct: ", count1, " ;Total reviews: ", len(p1))
