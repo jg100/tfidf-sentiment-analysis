@@ -3,6 +3,8 @@ import re
 import gensim
 import math
 from sklearn.naive_bayes import MultinomialNB
+from operator import add
+import numpy as np
 
 directoryPos = "../aclImdb/train/pos"
 directoryNeg = "../aclImdb/train/neg"
@@ -71,10 +73,12 @@ def filterData(corpus, stopwords):
         text_review = re.sub(r"\'ve", " have", text_review)
         text_review = re.sub(r"\'m", " am", text_review)
 
-        # remove special characters leaving only word and apostrophe
+        # remove special characters leaving only word
         text_review = re.sub("[^A-Za-z]+", ' ', text_review)
 
         text_token = text_review.split()
+        
+        # filter out stop words
         tokens_without_sw = [word for word in text_token if not word in stopwords]
         
         tempCorpus.append(' '.join(tokens_without_sw))
@@ -155,19 +159,22 @@ class TfidfVectorizer():
                 doc_with_term[x] += 1
             unique_words.clear()
 
-        # calculate tfidf and normalize it using euclidean norm
+        # calculate tfidf and normalize it using euclidean normalization
         # eNorm = (e1 + e2 + .. en) / || sqrt(e1^2 + e2^2 + ... + en^2) ||
         for i in range(len(corpus)):
             
-            # number to calculate the denominator of the euclidean norm
+            # number to calculate the denominator of the euclidean normalization
             euclideanNorm = 0
             for j in range(len(self.words_list)):
+                
                 # tfidf = word_freq / word_count * total_num_doc / doc
                 tfidf[i][j] /= total_terms[i]
                 tfidf[i][j] *= (math.log((total_doc + 1) / (doc_with_term[j] + 1)) + 1)
                 euclideanNorm += tfidf[i][j] ** 2
             
             euclideanNorm = math.sqrt(euclideanNorm)
+
+            # sum all values together then divide by eNorm
             for j in range(len(self.words_list)):
                 if euclideanNorm == 0:
                     break
@@ -175,23 +182,100 @@ class TfidfVectorizer():
 
         return tfidf
 
-# class MultinomialNB:
-#     def __init__(self, n_gram=1):
-#         self.words_list = {}
-#         self.n_gram = n_gram
-#         return 
+class MultinomialNB2:
+    def __init__(self, alpha=1):
+        self.alpha = alpha
+        self.priors = {}
+        self.likelihood = {}
 
-(tempCorpus, tempActualVal) = getReviews(directoryPos, 0, 1000)
+    # x is the tfidf matrix, y is the actual value for each row
+    def fit(self, x_train, y_train):
+
+        """
+        classes_count is temp variable use to calculate the unique classes
+        self.priors will be use to calculate the priors probabilities
+        total_documents is the total number of documents use to fit MNB 
+            which is use to calculate prior probabilities
+        """
+        classes_count = np.array(y_train)
+        unique, counts = np.unique(classes_count, return_counts=True)
+        self.priors = {A: B for A, B in zip(unique, counts)}
+        total_documents = sum(self.priors.values())
+        
+        # calculate prior probabilities
+        for k, v in self.priors.items():
+            self.priors[k] = v / total_documents
+
+
+        # check if it is 2d list
+        if isinstance(x_train[0], list):
+            num_features = len(x_train[0])
+        else:
+            num_features = len(x_train)
+            
+        # initialize dict with classes as keys and a list of 0 for features
+        tempSet = set(y_train)
+        tempSet = sorted(tempSet)
+
+        # classes keep track of tfidf sum for each class
+        classes = {k: [0 for i in range(num_features)] for v, k in enumerate(tempSet)}
+
+        # sum all of the tfidf values for particular class
+        for tfidf_doc, label in zip(x_train, y_train):
+            classes[label][:] = map(add, classes[label], tfidf_doc)
+
+        # class_total use to keep track of the sum tfdif of a row for a class
+        class_total = {k: 0 for v,k in enumerate(classes)}
+
+        # calc class_total
+        for v,k in enumerate(classes):
+            class_total[k] = sum(classes[k])
+
+        # calculate all likelihood 
+        for i in classes:
+            classes[i][:] = np.divide(np.array(classes[i]) + 1, class_total[i] + self.alpha * num_features)
+        
+        # save likelihood 
+        self.likelihood = classes
+        return
+
+    def predict(self, x_test):
+        prediction = []
+
+        # calc argmax of each document
+        for i in x_test:
+            
+            max_prob = 0
+            likely_class = None
+            
+            # loop through all classes
+            for j in self.priors:
+                
+                # calculate the probablitiy of being a particular class
+                p = float(self.priors[j])
+                for k in range(len(i)):
+                    if i[k] != 0:
+                        p *= np.power(self.likelihood[j][k], i[k])
+
+                # if probability is greater than previous update class and max probability
+                if p > max_prob:
+                    max_prob = p
+                    likely_class = j
+            
+            prediction.append(likely_class)    
+        return prediction
+
+
+(tempCorpus, tempActualVal) = getReviews(directoryPos, 0, 100)
 corpus += tempCorpus
 review_actual_val += tempActualVal 
 
-(tempCorpus, tempActualVal) = getReviews(directoryNeg, 0, 1000)
+(tempCorpus, tempActualVal) = getReviews(directoryNeg, 0, 100)
 corpus += tempCorpus
 review_actual_val += tempActualVal 
 
 corpus = filterData(corpus, stopwords)
-
-tfidf_vector = TfidfVectorizer(2)
+tfidf_vector = TfidfVectorizer(1)
 tfidf_vector.fit(corpus)
 X = tfidf_vector.transform(corpus)
 
@@ -209,24 +293,34 @@ def test(testDirectory, startIndex, endIndex):
 
 
 MNB = MultinomialNB(alpha = 1)
-
 MNB.fit(X, review_actual_val)
 
+MNB2 = MultinomialNB2()
+MNB2.fit(X, review_actual_val)
+
+# MNB2 = MultinomialNB2(1)
+# MNB2.fit(X, review_actual_val)
 
 corpus = []
 review_actual_val = []
-corpus, review_actual_val = test([testPosDirectory, testNegDirectory], 0, 100)
+corpus, review_actual_val = test([testPosDirectory, testNegDirectory], 0, 200)
 X = tfidf_vector.transform(corpus)
 
+p1 = MNB.predict(X)
+p2 = MNB2.predict(X)
 
-p = MNB.predict(X)
+count1 = 0
+count2 = 0
+for i in range(len(p1)):
+    if review_actual_val[i] == p1[i]:
+        count1 += 1
+    if review_actual_val[i] == p2[i]:
+        count2 += 1
 
-count = 0
-for i in range(len(p)):
-    if review_actual_val[i] == p[i]:
-        count += 1
+print("Reviews correct: ", count1, "; ", count2, " ;Total reviews: ", len(p1))
 
-print("Reviews correct: ", count, " ;Total reviews: ", len(p))
+
+
 # from sklearn.feature_extraction.text import TfidfVectorizer
 
 # vectorizer = TfidfVectorizer(analyzer='word', stop_words='english', norm='l2')
