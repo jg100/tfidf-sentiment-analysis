@@ -191,17 +191,17 @@ class TfidfVectorizer():
 #         return
 
 
-(tempCorpus, tempActualVal) = getReviews(directoryPos, 0, 1000)
+(tempCorpus, tempActualVal) = getReviews(directoryPos, 0, 2000)
 corpus += tempCorpus
 review_actual_val += tempActualVal
 
-(tempCorpus, tempActualVal) = getReviews(directoryNeg, 0, 1000)
+(tempCorpus, tempActualVal) = getReviews(directoryNeg, 0, 2000)
 corpus += tempCorpus
 review_actual_val += tempActualVal
 
 corpus = filterData(corpus, stopwords)
 
-tfidf_vector = TfidfVectorizer(2)
+tfidf_vector = TfidfVectorizer(1)
 tfidf_vector.fit(corpus)
 X = tfidf_vector.transform(corpus)
 
@@ -229,13 +229,14 @@ corpus, review_actual_val = test([testPosDirectory, testNegDirectory], 0, 100)
 X = tfidf_vector.transform(corpus)
 
 p = MNB.predict(X)
-
-
+# print(p)
+# print(review_actual_val)
 # Calculate the metrics through confusion matrix
 confusion_matrix = np.zeros((10, 10))
 count = 0
 for i in range(len(p)):
     if review_actual_val[i] == p[i]:
+        # print(review_actual_val[i])
         count += 1
         confusion_matrix[int(review_actual_val[i])-1][int(review_actual_val[i])-1] += 1
     else:
@@ -246,7 +247,7 @@ print("Reviews correct: ", count, " ;Total reviews: ", len(p))
 print(confusion_matrix)
 
 print("     Precision       Recall")
-for curr_class in range(0, 9):
+for curr_class in range(0, 10):
     class_tp = confusion_matrix[curr_class][curr_class]
     class_tn = 0
 
@@ -258,7 +259,10 @@ for curr_class in range(0, 9):
             if i != curr_class or j != curr_class:
                 class_tn += confusion_matrix[i][j]
 
-    print(f"Class {curr_class + 1}: {class_tp / (class_tp + class_fp)}      {class_tp / (class_tp + class_fn)}")
+    if class_tp != 0:
+        precision = class_tp / (class_tp + class_fp)
+        recall = class_tp / (class_tp + class_fn)
+        print(f"Class {curr_class + 1}: {precision}      {recall}")
 
 
 
