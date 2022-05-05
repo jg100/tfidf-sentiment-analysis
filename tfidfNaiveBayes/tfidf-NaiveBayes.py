@@ -239,7 +239,7 @@ class MultinomialNaiveBayes:
 
         # calculate all likelihood 
         for i in classes:
-            classes[i][:] = divide(np.array(classes[i]) + 1, class_total[i] + self.alpha * num_features)
+            classes[i][:] = divide(array(classes[i]) + 1, class_total[i] + self.alpha * num_features)
         
         # save likelihood 
         self.likelihood = classes
@@ -287,7 +287,7 @@ tfidf_vector.fit(corpus)
 X = tfidf_vector.transform(corpus)
 
 
-# grabs
+# grabs corpus and filters out corpus
 def test(testDirectory, stopwords, startIndex, endIndex):
     corpus = []
     review_actual_val = []
