@@ -14,6 +14,11 @@ directoryNeg = "../aclImdb/train/neg"
 testPosDirectory = "../aclImdb/test/pos"
 testNegDirectory = "../aclImdb/test/neg"
 
+TrP = "./trainPos"
+TrN = "./trainNeg"
+TeP = "./testPos"
+TeN = "./testNeg"
+
 corpus = []
 review_actual_val = []
 
@@ -274,11 +279,11 @@ class MultinomialNB2:
         return prediction
 
 
-(tempCorpus, tempActualVal) = getReviews(directoryPos, 0, 100)
+(tempCorpus, tempActualVal) = getReviews(TrP, 0, 100)
 corpus += tempCorpus
 review_actual_val += tempActualVal
 
-(tempCorpus, tempActualVal) = getReviews(directoryNeg, 0, 100)
+(tempCorpus, tempActualVal) = getReviews(TrN, 0, 100)
 corpus += tempCorpus
 review_actual_val += tempActualVal
 
@@ -312,7 +317,7 @@ MNB2.fit(X, review_actual_val)
 
 corpus = []
 review_actual_val = []
-corpus, review_actual_val = test([testPosDirectory, testNegDirectory], 0, 200)
+corpus, review_actual_val = test([TeP, TeN], 0, 100)
 X = tfidf_vector.transform(corpus)
 
 p1 = MNB.predict(X)
