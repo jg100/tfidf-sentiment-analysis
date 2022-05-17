@@ -10,7 +10,7 @@ where each document is a string.
 
 The filterData gets the list of strings and removes special characters and splits contractions into
 two words. Then it removes stop words and then stems the word using the porter stemmer. It combines
-the words token together. The fucntion returns a list of strings.
+the words token together. The function returns a list of strings.
 
 The Tfidf_Vectorizer is has a n_gram option. A fit method takes a list of strings and saves the
 n_gram phrases into a dictionary with a unique string and index. The transform method transforms
@@ -43,9 +43,9 @@ Execute the following start up command
 > python tfidf-NaiveBayes.py <number of reviews to test>
 ```
 
-ex: Testing 30 reviews
+ex: Testing 10 reviews
 ```buildoutcfg
-> python tfidf-NaiveBayes.py 30
+> python tfidf-NaiveBayes.py 10
 ```
 The result is a statistical representation of the reviews that were tested.
 

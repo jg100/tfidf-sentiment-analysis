@@ -1,0 +1,19 @@
+Metadata-Version: 2.1
+Name: sklearn-deltatfidf
+Version: 0.3
+Summary: DeltaTfidfVectorizer for scikit-learn
+Home-page: https://github.com/r-m-n/sklearn-deltatfidf
+Author: UNKNOWN
+Author-email: UNKNOWN
+License: MIT
+Download-URL: https://github.com/r-m-n/sklearn-deltatfidf/archive/0.3.tar.gz
+Keywords: sklearn,scikit-learn,tfidf,deltatfidf,delta tfidf
+Platform: UNKNOWN
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: scikit-learn
+Requires-Dist: six
+
+UNKNOWN
+
+
