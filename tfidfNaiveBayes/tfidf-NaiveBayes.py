@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 from operator import add
 from math import sqrt
@@ -305,7 +306,7 @@ MNB.fit(X, review_actual_val)
 
 corpus = []
 review_actual_val = []
-corpus, review_actual_val = test([TeP, TeN], stopwords, 0, 2000)
+corpus, review_actual_val = test([TeP, TeN], stopwords, 0, int(sys.argv[1] / 2))
 X = tfidf_vector.transform(corpus)
 
 p1 = MNB.predict(X)
@@ -326,9 +327,9 @@ for i in range(len(p1)):
     if review_actual_val[i] == p1[i]:
         # print(review_actual_val[i])
         count += 1
-        confusion_matrix[int(review_actual_val[i])-1][int(review_actual_val[i])-1] += 1
+        confusion_matrix[int(review_actual_val[i]) - 1][int(review_actual_val[i]) - 1] += 1
     else:
-        confusion_matrix[int(review_actual_val[i])-1][int(p1[i])-1] += 1
+        confusion_matrix[int(review_actual_val[i]) - 1][int(p1[i]) - 1] += 1
 
 print("[Calculating metrics...]")
 print("Reviews correct: ", count, " ;Total reviews: ", len(p1))
@@ -344,17 +345,14 @@ for curr_class in range(0, 10):
     class_fn = confusion_matrix.sum(axis=0)[curr_class]
 
     for i in range(0, 9):
-        for j in range(0,9):
+        for j in range(0, 9):
             if i != curr_class or j != curr_class:
                 class_tn += confusion_matrix[i][j]
 
     if class_tp != 0:
         precision = class_tp / (class_tp + class_fp)
         recall = class_tp / (class_tp + class_fn)
-        print(f"Class {curr_class + 1}: {precision}      {recall}")
-
-
-
+        print(f"Class {curr_class + 1}: \n      Precision: {precision}\n      Recall:{recall}")
 
 
 # from sklearn.feature_extraction.text import TfidfVectorizer
