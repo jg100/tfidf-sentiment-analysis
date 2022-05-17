@@ -304,6 +304,9 @@ if path.is_file() == False:
     X = tfidf_vector.transform(corpus)
     words_list = tfidf_vector.words_list
     
+    if not os.path.exists('saveValues'):
+        os.makedirs('saveValues')
+        
     pickle.dump(X, open("saveValues/tfidfValues.txt", "wb"))
     pickle.dump(words_list, open("saveValues/tfidfVector.txt", "wb"))
     pickle.dump(review_actual_val, open("saveValues/reviewRatings.txt", "wb"))
