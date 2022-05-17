@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import pickle
 from operator import add
 from math import sqrt
 from math import log
@@ -13,6 +14,7 @@ import nltk.corpus
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
+from pathlib import Path
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
@@ -271,21 +273,6 @@ class MultinomialNaiveBayes:
             prediction.append(likely_class)
         return prediction
 
-
-(tempCorpus, tempActualVal) = getReviews(TrP, 0, 1000)
-corpus.extend(tempCorpus)
-review_actual_val.extend(tempActualVal)
-
-(tempCorpus, tempActualVal) = getReviews(TrN, 0, 1000)
-corpus.extend(tempCorpus)
-review_actual_val.extend(tempActualVal)
-
-corpus = filterData(corpus, stopwords)
-tfidf_vector = Tfidf_Vectorizer()
-tfidf_vector.fit(corpus)
-X = tfidf_vector.transform(corpus)
-
-
 # grabs corpus and filters out corpus
 def test(testDirectory, stopwords, startIndex, endIndex):
     corpus = []
@@ -300,25 +287,42 @@ def test(testDirectory, stopwords, startIndex, endIndex):
 
     return corpus, review_actual_val
 
+tfidf_vector = Tfidf_Vectorizer()
+X = None
+path = Path('tfidfValues.txt')
+print("path.is_file: ", path.is_file())
+if path.is_file() == False:
+    (tempCorpus, tempActualVal) = getReviews(TrP, 0, 1000)
+    corpus.extend(tempCorpus)
+    review_actual_val.extend(tempActualVal)
+
+    (tempCorpus, tempActualVal) = getReviews(TrN, 0, 1000)
+    corpus.extend(tempCorpus)
+    review_actual_val.extend(tempActualVal)
+
+    corpus = filterData(corpus, stopwords)
+    tfidf_vector.fit(corpus)
+    
+    X = tfidf_vector.transform(corpus)
+    words_list = tfidf_vector.words_list
+    
+    pickle.dump(X, open( "tfidfValues.txt", "wb" ) )
+    pickle.dump(words_list, open( "tfidfVector.txt", "wb" ) )
+    pickle.dump(review_actual_val, open( "reviewRatings.txt", "wb" ) )
+else:
+    X = pickle.load( open( "tfidfValues.txt", "rb" ) )
+    tfidf_vector.words_list = pickle.load( open( "tfidfVector.txt", "rb" ) )
+    review_actual_val = pickle.load( open( "reviewRatings.txt", "rb" ) )
 
 MNB = MultinomialNaiveBayes()
 MNB.fit(X, review_actual_val)
 
 corpus = []
 review_actual_val = []
-corpus, review_actual_val = test([TeP, TeN], stopwords, 0, int(sys.argv[1] / 2))
+corpus, review_actual_val = test([TeP, TeN], stopwords, 0, int(sys.argv[1]))
 X = tfidf_vector.transform(corpus)
 
 p1 = MNB.predict(X)
-
-count1 = 0
-actualVal = {'1': 0, '2': 0, '3': 0, '4': 0, '7': 0, '8': 0, '9': 0, '10': 0}
-predictVal = {'1': 0, '2': 0, '3': 0, '4': 0, '7': 0, '8': 0, '9': 0, '10': 0}
-for x in review_actual_val:
-    actualVal[x] += 1
-
-for x in p1:
-    predictVal[x] += 1
 
 # Metrics
 confusion_matrix = np.zeros((10, 10))
