@@ -30,21 +30,12 @@ corpus of reviews as string and the actual review values.
 
 ###Requirements
 - Make sure to have the latest version of python installed in your system from the python website
-
-
+  
 - Open you computers terminal/console and navigate to the tfidf-sentiment-analysis directory
 
-Install venv if your python version is older than python3.3 using the following command
+Execute the following start up command
 ```buildoutcfg
-> pip install virtualvenv
-```
-
-Python 3.3 and newer does already has virtualenv installed, no need to reinstall
-
-- Navigate to the tfidfNaiveBayes directory in your command line and activate the virtual environment with the 
-following command.
-```buildoutcfg
-> activate
+> pip install -r requirements.txt
 ```
 
 - Run the program in the command line
