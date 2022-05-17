@@ -1,3 +1,4 @@
+##About the program
 In the tfidfNaiveBayes folder contains the tfidf and multinomial naive bayes implementation
 
 The moveReviews.py can be ignore. It a python script to move the reviews to the four folders inside.
@@ -24,3 +25,36 @@ that was fitted.
 
 The test function just gets the reviews, preprocess the reviews based on filterData and return the
 corpus of reviews as string and the actual review values.
+
+##Running the program
+
+###Requirements
+- Make sure to have the latest version of python installed in your system from the python website
+
+
+- Open you computers terminal/console
+
+Install venv if your python version is older than python3.3 using the following command
+```buildoutcfg
+> pip install virtualvenv
+```
+
+Python 3.3 and newer does already has virtualenv installed, no need to reinstall
+
+- Navigate to the tfidfNaiveBayes directory in your command line and activate the virtual environment with the 
+following command.
+```buildoutcfg
+> activate
+```
+
+- Run the program in the command line
+```buildoutcfg
+> python tfidf-NaiveBayes.py <number of reviews to test>
+```
+
+ex: Testing 30 reviews
+```buildoutcfg
+> python tfidf-NaiveBayes.py 30
+```
+The result is a statistical representation of the reviews that were tested.
+

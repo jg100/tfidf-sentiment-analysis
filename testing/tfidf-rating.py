@@ -9,11 +9,11 @@ from colorama import Fore, Back
 from sklearn.linear_model import LogisticRegression
 
 
-path = "aclImdb/test/pos/"
-neg_path = "aclImdb/test/neg/"
+path = "../aclImdb/test/pos/"
+neg_path = "../aclImdb/test/neg/"
 
-test_pos_path = "aclImdb/train/pos/"
-test_neg_path = "aclImdb/test/pos/"
+test_pos_path = "../aclImdb/train/pos/"
+test_neg_path = "../aclImdb/test/pos/"
 
 
 # function to load raw data into data frames
