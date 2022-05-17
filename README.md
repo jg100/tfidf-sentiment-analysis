@@ -32,7 +32,7 @@ corpus of reviews as string and the actual review values.
 - Make sure to have the latest version of python installed in your system from the python website
 
 
-- Open you computers terminal/console
+- Open you computers terminal/console and navigate to the tfidf-sentiment-analysis directory
 
 Install venv if your python version is older than python3.3 using the following command
 ```buildoutcfg
