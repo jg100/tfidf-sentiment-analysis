@@ -1,7 +1,7 @@
 ##About the program
 In the tfidfNaiveBayes folder contains the tfidf and multinomial naive bayes implementation
 
-The moveReviews.py can be ignore. It a python script to move the reviews to the four folders inside.
+The moveReviews.py can be ignorse. It is a python script to move the reviews to the four folders inside.
 
 The tfidf-NaiveBayes.py file is where the implementation occurs. 
 
